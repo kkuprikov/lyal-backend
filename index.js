@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const { createProxyMiddleware, Filter, Options, RequestHandler } = require('http-proxy-middleware');
+const { createProxyMiddleware, Filter, Options, RequestHandler, responseInterceptor } = require('http-proxy-middleware');
 const app = express();
 const port = 3001
 
@@ -10,9 +10,15 @@ const proxy = createProxyMiddleware({
   target: 'https://api-free.deepl.com',
   changeOrigin: true,
   logLevel: 'debug',
-  onProxyReq: function onProxyReq(proxyReq, req, res) {
+  selfHandleResponse: true,
+  onProxyReq: onProxyReq = (proxyReq, req, res) => {
     proxyReq.setHeader('Authorization', `DeepL-Auth-Key ${deeplApiKey}`)
   },
+  onProxyRes: responseInterceptor(async (responseBuffer, proxyRes, req, res) => {
+    const response = JSON.parse(responseBuffer.toString('utf8'));
+    // console.log(response)
+    return response.translations[0].text;
+  }),
 });
 
 
