@@ -16,8 +16,12 @@ const proxy = createProxyMiddleware({
   },
   onProxyRes: responseInterceptor(async (responseBuffer, proxyRes, req, res) => {
     const response = JSON.parse(responseBuffer.toString('utf8'));
-    // console.log(response)
-    return response.translations[0].text;
+    let text = response.translations[0].text
+    let translations = {
+      translated_text: text,
+      card_names: text.match(/\b(\w+)\b/g).sort((a, b) => a.length - b.length).slice(-5)
+    }
+    return JSON.stringify(translations);
   }),
 });
 
